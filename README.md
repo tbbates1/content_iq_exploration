@@ -1,6 +1,6 @@
 # ContentIQ exploration: project-scoped search over a client drive
 
-Sales engineers answer RFQs from a deep client drive: `Clients/<client>/<year>_<project>/<files>`, with hundreds of similar projects. A question is usually about one project, or compares the current project with an older one. This repo shows how to answer such questions with Symplistic **ContentIQ** and **IBM watsonx Orchestrate (wxO)**, searching one project instead of the whole drive.
+Sales engineers answer RFQs from a deep client drive: `Clients/<client>/<year>_<project>/<files>`, with many similar projects. A question is usually about one project, or compares the current project with an older one. This repo shows how to answer such questions with Symplistic **ContentIQ** and **IBM watsonx Orchestrate (wxO)**, searching one project instead of the whole drive.
 
 ContentIQ indexes the drive but stores each file under its **file name only**, and a search can't be limited to a folder. So we add two wxO agents and a small **folder-map MCP server**. They work out which project folder a question is about, search ContentIQ, and keep only the passages from that project's files.
 
