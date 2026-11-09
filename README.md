@@ -51,12 +51,20 @@ More detail: [`docs/architecture/project-searcher.html`](docs/architecture/proje
 
 | Path | What it is |
 |---|---|
-| `synthetic_data/Clients/` | Simulated client drive, the full folder system `Clients/<client>/<year>_<project>/`: 40 clients, 400 projects, 1,242 one-line RFQ files. Upload it to OneDrive. |
-| `synthetic_data/sample_documents/` | Sample synthetic documents for one project: gearless mill drive spec, datasheets, site conditions and a single line diagram (PDF, DOCX, XLSX). Used by the single-project retrieval test. |
+| `synthetic_data/` | The two synthetic data sources (see below) |
 | `backend/` | Folder-map MCP server (`onedrive_map/`), `build_map.py` and `smoke_test.py` |
 | `wxo/` | Agent definitions (`project_searcher.yaml`, `rfq_assistant.yaml`) and `ask.py`, which asks an agent through the API and prints every tool call |
 | `scripts/deploy_wxo.sh` | Builds the map, uploads the toolkit and imports both agents |
-| `docs/` | [`FOLDER_SCOPING.md`](docs/FOLDER_SCOPING.md) (findings: why ContentIQ can't search a subfolder), [`CONTENTIQ_GUIDE.md`](docs/CONTENTIQ_GUIDE.md) (UI, setup, API), [`RETRIEVAL_TEST.md`](docs/RETRIEVAL_TEST.md) (Q1–Q6 on `synthetic_data/sample_documents/`), and architecture diagrams |
+| `docs/` | [`FOLDER_SCOPING.md`](docs/FOLDER_SCOPING.md) (findings: why ContentIQ can't search a subfolder), [`CONTENTIQ_GUIDE.md`](docs/CONTENTIQ_GUIDE.md) (UI, setup, API), [`RETRIEVAL_TEST.md`](docs/RETRIEVAL_TEST.md) (Q1–Q6 on `synthetic_data/sample_documents/`), [`INGESTION_PIPELINE.md`](docs/INGESTION_PIPELINE.md) (next idea), and architecture diagrams |
+
+## The two data sources
+
+Everything in `synthetic_data/` is made up. Details are in [`synthetic_data/README.md`](synthetic_data/README.md).
+
+| | What it is | What it tests |
+|---|---|---|
+| **1. [`files_system_example/`](synthetic_data/files_system_example/)** | The full folder system of a client drive: `<client>/<year>_<project>/<files>`, with 40 clients, 400 projects and 1,242 one-line RFQ files. You upload it to OneDrive as `Clients`. | Whether a search can stay inside one project. The drive has the same site in different years, the same site under different clients, and 90 file names that occur in more than one project. |
+| **2. [`sample_documents/`](synthetic_data/sample_documents/)** | Sample synthetic documents for one project (Bramhall Copper, 2021 Quebrada Azul Expansion): a gearless mill drive spec, datasheets, a mill data sheet, site conditions and a single line diagram, as PDF, DOCX and XLSX. | Whether a search finds values across formats: text, tables, spreadsheet cells and drawing callouts ([Q1–Q6](docs/RETRIEVAL_TEST.md)). |
 
 ## Set it up
 
@@ -79,7 +87,7 @@ cp .env.example .env      # then fill in WXO_API_KEY and WXO_SERVICE_URL (and CO
 
 ### 2. Load the synthetic client drive into ContentIQ
 
-1. Upload the folder `synthetic_data/Clients` to the top level of your OneDrive.
+1. Create a folder named `Clients` at the top level of your OneDrive and upload the 40 client folders from `synthetic_data/files_system_example/` into it.
 2. In ContentIQ, open **Connect → OneDrive**, select the `Clients` folder and create a new agent for it, for example `Client_Drive`. ContentIQ creates a wxO agent with the same name and a search tool for it.
 3. Wait for the run to finish (**Ingest** page). It can take a few hours: in our test, ContentIQ processed about 6 small files per minute.
 4. Find the name of the search tool and put it in `.env` as `CONTENTIQ_WXO_TOOL`:
@@ -97,7 +105,7 @@ cp .env.example .env      # then fill in WXO_API_KEY and WXO_SERVICE_URL (and CO
 scripts/deploy_wxo.sh
 ```
 
-The script builds `backend/onedrive_map/folder_map.json` from `synthetic_data/Clients`, runs the smoke test, uploads the `onedrive_map` toolkit (wxO hosts the server, so nothing runs on your machine), and imports `project_searcher` and `rfq_assistant`. The agents use `azure-openai/gpt-5.4`. If your instance doesn't offer that model, change `llm:` in `wxo/*.yaml` (`orchestrate models list`).
+The script builds `backend/onedrive_map/folder_map.json` from `synthetic_data/files_system_example`, runs the smoke test, uploads the `onedrive_map` toolkit (wxO hosts the server, so nothing runs on your machine), and imports `project_searcher` and `rfq_assistant`. The agents use `azure-openai/gpt-5.4`. If your instance doesn't offer that model, change `llm:` in `wxo/*.yaml` (`orchestrate models list`).
 
 ### 4. Ask
 
@@ -127,9 +135,14 @@ A vague question should make the agent ask which project you mean instead of gue
 
 - Each ContentIQ search covers the whole client-drive agent and returns its top 15 passages. `match_sources` can only drop passages from other projects. It can't bring in passages that didn't make the top 15. The one-line sample files name their project, which makes this look better than it will on real documents.
 - Files with the same name in different projects (90 names in the synthetic drive, shared by 187 files) may merge in ContentIQ, because it identifies files by name.
-- The folder map is a snapshot of `synthetic_data/Clients`. Re-run `scripts/deploy_wxo.sh` after the drive changes. In production, the map would come from Microsoft Graph.
+- The folder map is a snapshot of `synthetic_data/files_system_example`. Re-run `scripts/deploy_wxo.sh` after the drive changes. In production, the map would come from Microsoft Graph.
 - What would fix this on the ContentIQ side (a folder path per file, a folder or file filter on search) is listed in [`docs/FOLDER_SCOPING.md`](docs/FOLDER_SCOPING.md#what-to-ask-symplistic).
 
 ## Single-project retrieval test
 
 `synthetic_data/sample_documents/` holds one fictional project's documents in several formats, with six test questions and expected answers in [`docs/RETRIEVAL_TEST.md`](docs/RETRIEVAL_TEST.md). Load `synthetic_data/sample_documents/` into a separate ContentIQ agent (for example `Project_Files`) to check retrieval across PDF, DOCX, XLSX and drawings.
+
+## Next tasks
+
+1. **Our own ingestion pipeline.** In our own UI, the user picks a folder in SharePoint or OneDrive. Our backend reads it through Microsoft Graph and uploads the files through the ContentIQ API, with the folder path in each file name. This removes name collisions, and the folder map stays current. See [`docs/INGESTION_PIPELINE.md`](docs/INGESTION_PIPELINE.md).
+2. **Open the real file.** Today an answer only names the ContentIQ source. Add a tool that opens the file at its real location in SharePoint or OneDrive, so the user goes straight to the document.

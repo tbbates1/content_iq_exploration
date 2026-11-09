@@ -8,7 +8,7 @@ The architecture is drawn in [`docs/architecture/project-searcher.html`](../docs
 
 | Part | Where | What it does |
 |---|---|---|
-| `build_map.py` | Your machine | Walks the drive and writes `onedrive_map/folder_map.json`. Today the drive is `synthetic_data/Clients`. Later it would read Microsoft Graph. |
+| `build_map.py` | Your machine | Walks the drive and writes `onedrive_map/folder_map.json`. Today the drive is `synthetic_data/files_system_example`. Later it would read Microsoft Graph. |
 | `onedrive_map/` | Hosted by watsonx Orchestrate (local MCP toolkit, stdio) | `server.py` serves the tools below from `folder_map.json`. Nothing has to run on your machine. |
 | `wxo/project_searcher.yaml` | watsonx Orchestrate | Agent: resolves one project, searches ContentIQ (the client-drive agent's search tool), keeps only that project's results. |
 | `wxo/rfq_assistant.yaml` | watsonx Orchestrate | Top agent: splits the question by project and calls Project Searcher for each part. |
@@ -52,4 +52,4 @@ sed "s/__CONTENTIQ_WXO_TOOL__/$CONTENTIQ_WXO_TOOL/" wxo/project_searcher.yaml > 
 
 - Each ContentIQ search still covers the whole client-drive agent and returns its top 15 passages. `match_sources` can only drop results; it can't make the right project's files appear. The one-line sample files name their project, which makes this look better than it will be on real documents.
 - The map is a snapshot. Rebuild and re-upload it when the drive changes. In production the server would read a live map from the backend that syncs with Microsoft Graph.
-- A personal OneDrive account can't register an Entra app to read the drive through Microsoft Graph, so the demo builds the map from the local copy in `synthetic_data/Clients`. A work tenant (SharePoint) would need an app registered by its IT (`Sites.Selected`).
+- A personal OneDrive account can't register an Entra app to read the drive through Microsoft Graph, so the demo builds the map from the local copy in `synthetic_data/files_system_example`. A work tenant (SharePoint) would need an app registered by its IT (`Sites.Selected`).

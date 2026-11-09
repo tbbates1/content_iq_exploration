@@ -10,7 +10,7 @@ The architecture this feeds into is drawn in [`architecture/rfq-assistant.html`]
 
 1. **The chat call has no place to say which folder.** `POST /api/headless/chat` takes only `agent_id`, `message`, `thread_id` and `stream`. Nothing else in the API filters a search.
 2. **ContentIQ doesn't record the folder.** Each file is stored under its file name only. For example, `Project_Files` lists `QAZ-EP-0000-265-SPC-00006-Q.pdf`, not `Projects/.../spec/QAZ-EP-0000-265-SPC-00006-Q.pdf`. A filter would have no folder path to match against.
-3. **Files with the same name in different folders may collide.** Because files are identified by name, two projects that both have an `RFQ.pdf` may overwrite or merge in one agent. In `synthetic_data/Clients`, 1,242 files share only 1,145 names.
+3. **Files with the same name in different folders may collide.** Because files are identified by name, two projects that both have an `RFQ.pdf` may overwrite or merge in one agent. In `synthetic_data/files_system_example`, 1,242 files share only 1,145 names.
 4. **The only labels stored on each file are access roles.** These are for permissions (`access_roles`, `tenant_id`). They depend on who is asking, not on what is asked, and changing them needs a website login.
 
 ## The two options that work today
@@ -49,6 +49,7 @@ Tested 2026-11-09 against the backend API spec at <https://backend.contentiq.sym
 | Chat with an agent | Yes. [Q2](RETRIEVAL_TEST.md) returned 72 poles and 10.13 rpm with 3 sources in about 27 s. |
 | List OneDrive | Top level only. Query parameters are ignored. |
 | Load OneDrive files or whole folders into an agent | Yes (`POST /api/headless/onedrive/ingest`), but only into an agent that already exists. |
+| Upload files straight into an agent | Yes (`POST /api/headless/document/ingest`, multipart). 2 `.txt` files were indexed in about 50 s. ContentIQ keeps the uploaded file name as the source name, so we can choose it. This is the basis of [our own ingestion pipeline](INGESTION_PIPELINE.md). |
 | Create an agent | No. Website only. |
 | List subfolders, or list agents | No. Website only; the key gets 401 `session_expired`. |
 | Read the schedule, plan limits and agent ID | Yes, through the undocumented `GET /api/headless/scheduler/config`. |
@@ -85,6 +86,10 @@ Read through the wxO API with `WXO_API_KEY`. For the `source_hint` test, we sent
 - **Backend error:** every response's debug block shows `'MongoDB' object has no attribute 'list_agent_domain_knowledge'`. The domain-knowledge step fails and is skipped.
 - **Security:** anyone who can download tools in this wxO instance can read the tool's signing secret. Ask Symplistic how to rotate it, and keep downloaded copies of the tool out of the repo.
 
+## Lead: our own ingestion pipeline (not built)
+
+Upload the files ourselves through the API, with the folder path in each file name. This fixes the name collisions and puts the folder in every passage, without any change from Symplistic. See [`INGESTION_PIPELINE.md`](INGESTION_PIPELINE.md).
+
 ## Lead: our own vector store (not tested)
 
 ContentIQ can write its index to a vector store we own. `POST /api/milvus/credentials` takes a `uri`, a `token` and an optional `provider`: Milvus/Zilliz, Qdrant or Azure AI Search. The MCP docs list the same as `ciq_set_milvus_credentials`.
@@ -99,7 +104,7 @@ Don't call this endpoint on a shared tenant before checking with Symplistic (ite
 
 ## How to test the collision risk
 
-1. Upload `synthetic_data/Clients` to the top level of OneDrive.
+1. Upload the client folders in `synthetic_data/files_system_example/` to a top-level OneDrive folder named `Clients`.
 2. Create one test agent in the website and load the whole `Clients` folder into it (step 2 of the main [`README.md`](../README.md)).
 3. Count its files with `GET /api/headless/milvus/sources?agent_id=$CONTENTIQ_DRIVE_AGENT_ID`. If it shows fewer than 1,242, files with the same name were merged.
 4. Ask it a vague question and an exact one:

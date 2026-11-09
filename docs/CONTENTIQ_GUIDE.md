@@ -38,7 +38,7 @@ Agents used in this repo:
 | Agent | Holds | Used by |
 |---|---|---|
 | `Project_Files` (any name) | `synthetic_data/sample_documents/` | The single-project retrieval test, [`RETRIEVAL_TEST.md`](RETRIEVAL_TEST.md) |
-| `Client_Drive` (any name) | `synthetic_data/Clients` | The `project_searcher` agent, through its wxO search tool |
+| `Client_Drive` (any name) | `synthetic_data/files_system_example` | The `project_searcher` agent, through its wxO search tool |
 
 > If your tenant holds other agents, double-check the agent ID before you run any delete call (section 8).
 
