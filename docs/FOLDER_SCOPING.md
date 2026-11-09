@@ -10,7 +10,7 @@ The architecture this feeds into is drawn in [`architecture/rfq-assistant.html`]
 
 1. **The chat call has no place to say which folder.** `POST /api/headless/chat` takes only `agent_id`, `message`, `thread_id` and `stream`. Nothing else in the API filters a search.
 2. **ContentIQ doesn't record the folder.** Each file is stored under its file name only. For example, `Project_Files` lists `QAZ-EP-0000-265-SPC-00006-Q.pdf`, not `Projects/.../spec/QAZ-EP-0000-265-SPC-00006-Q.pdf`. A filter would have no folder path to match against.
-3. **Files with the same name in different folders may collide.** Because files are identified by name, two projects that both have an `RFQ.pdf` may overwrite or merge in one agent. In `sample_drive/`, 1,242 files share only 1,145 names.
+3. **Files with the same name in different folders may collide.** Because files are identified by name, two projects that both have an `RFQ.pdf` may overwrite or merge in one agent. In `synthetic_data/Clients`, 1,242 files share only 1,145 names.
 4. **The only labels stored on each file are access roles.** These are for permissions (`access_roles`, `tenant_id`). They depend on who is asking, not on what is asked, and changing them needs a website login.
 
 ## The two options that work today
@@ -99,7 +99,7 @@ Don't call this endpoint on a shared tenant before checking with Symplistic (ite
 
 ## How to test the collision risk
 
-1. Upload `sample_drive/Clients` to the top level of OneDrive.
+1. Upload `synthetic_data/Clients` to the top level of OneDrive.
 2. Create one test agent in the website and load the whole `Clients` folder into it (step 2 of the main [`README.md`](../README.md)).
 3. Count its files with `GET /api/headless/milvus/sources?agent_id=$CONTENTIQ_DRIVE_AGENT_ID`. If it shows fewer than 1,242, files with the same name were merged.
 4. Ask it a vague question and an exact one:

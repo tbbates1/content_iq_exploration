@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Build the folder map that the onedrive_map MCP server answers from.
 
-Today the source is a local folder: sample_drive/Clients stands in for the client
+Today the source is a local folder: synthetic_data/Clients stands in for the client
 OneDrive folder that ContentIQ ingests. In production the same records would come
 from Microsoft Graph (driveItem delta on the Clients folder), and only this file changes.
 
 Usage:
-    python backend/build_map.py                     # sample_drive/Clients -> onedrive_map/folder_map.json
+    python backend/build_map.py                     # synthetic_data/Clients -> onedrive_map/folder_map.json
     python backend/build_map.py --source PATH --root-name Clients
 """
 from __future__ import annotations
@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-DEFAULT_SOURCE = REPO / "sample_drive" / "Clients"
+DEFAULT_SOURCE = REPO / "synthetic_data" / "Clients"
 DEFAULT_OUT = Path(__file__).resolve().parent / "onedrive_map" / "folder_map.json"
 
 PROJECT_FOLDER = re.compile(r"^(?P<year>\d{4})_(?P<title>.+)$")

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Deploy the RFQ demo to watsonx Orchestrate:
-#   1. build the folder map from sample_drive/Clients and smoke-test the MCP server,
+#   1. build the folder map from synthetic_data/Clients and smoke-test the MCP server,
 #   2. upload backend/onedrive_map as the onedrive_map toolkit (wxO hosts it, stdio),
 #   3. import the project_searcher agent (with your ContentIQ search tool) and the rfq_assistant agent.
 #

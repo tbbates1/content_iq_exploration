@@ -36,6 +36,6 @@ tools:
   - onedrive_map:find_projects
   - onedrive_map:list_project_files
   - onedrive_map:match_sources
-  # The ContentIQ search tool of the agent that holds sample_drive/Clients.
+  # The ContentIQ search tool of the agent that holds synthetic_data/Clients.
   # scripts/deploy_wxo.sh replaces this with CONTENTIQ_WXO_TOOL from .env.
   - __CONTENTIQ_WXO_TOOL__

@@ -37,8 +37,8 @@ Agents used in this repo:
 
 | Agent | Holds | Used by |
 |---|---|---|
-| `Project_Files` (any name) | `data/` | The single-project retrieval test, [`RETRIEVAL_TEST.md`](RETRIEVAL_TEST.md) |
-| `Client_Drive` (any name) | `sample_drive/Clients` | The `project_searcher` agent, through its wxO search tool |
+| `Project_Files` (any name) | `synthetic_data/sample_documents/` | The single-project retrieval test, [`RETRIEVAL_TEST.md`](RETRIEVAL_TEST.md) |
+| `Client_Drive` (any name) | `synthetic_data/Clients` | The `project_searcher` agent, through its wxO search tool |
 
 > If your tenant holds other agents, double-check the agent ID before you run any delete call (section 8).
 
@@ -134,7 +134,7 @@ Go to **Schedule → New schedule**. Each job has an agent, a source, a selectio
 
 **For this repo:** schedule the client-drive agent on OneDrive with the selection `Clients` and **Ingest changed and new documents**. Starter allows only **1** scheduled job, so edit the existing job rather than adding another.
 
-> **Watch out:** with **Full reingest**, a daily job re-processed all 7 files in `data/` every night and took **4 to 4.5 hours** each time (Nov 5 to 8, 2026). For a static test set, use **Ingest changed and new documents**, and **Run now** when you actually change a file.
+> **Watch out:** with **Full reingest**, a daily job re-processed all 7 files in `synthetic_data/sample_documents/` every night and took **4 to 4.5 hours** each time (Nov 5 to 8, 2026). For a static test set, use **Ingest changed and new documents**, and **Run now** when you actually change a file.
 
 ## 7. Running the single-project test (Q1 to Q6)
 
@@ -142,9 +142,9 @@ The questions and expected answers are in [`RETRIEVAL_TEST.md`](RETRIEVAL_TEST.m
 
 ### 7.1 Load the documents
 
-Create an agent for the test (for example `Project_Files`) and load the files in `data/` into it:
+Create an agent for the test (for example `Project_Files`) and load the files in `synthetic_data/sample_documents/` into it:
 
-| File(s) in `data/` | Connector |
+| File(s) in `synthetic_data/sample_documents/` | Connector |
 |---|---|
 | `spec/…SPC-00006-Q.pdf` + `.docx`, `datasheet/…DST-00006-Q.pdf` + `.xlsx`, `mill/…55017-Q.pdf`, `site/…DBD-00002-B.pdf` | **Document Upload**, or drop them in the OneDrive folder |
 | `drawing/QAZ-5200-265-E-001_B.pdf` (single line diagram) | **CAD Drawing PDFs** (Visual NAV) |
