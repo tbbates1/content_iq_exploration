@@ -1,0 +1,4 @@
+# Tested with Python 3.12, ibm-watsonx-orchestrate 2.19.1, mcp 1.30.0
+ibm-watsonx-orchestrate>=2.19
+mcp>=1.12,<2
+requests>=2.31

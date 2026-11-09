@@ -1,0 +1,1 @@
+Eskvale Copper 2017 Pampa Larga Phase 1 RFQ 01: 10,000 kW drive, 96 poles, 10.44 rpm, 34.5 kV supply, delivery in 62 weeks (simulated, not real).

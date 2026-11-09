@@ -1,0 +1,1 @@
+Marmont Copper 2023 Laguna Roja Expansion RFQ 01: 11,000 kW drive, 80 poles, 10.48 rpm, 34.5 kV supply, delivery in 62 weeks (simulated, not real).

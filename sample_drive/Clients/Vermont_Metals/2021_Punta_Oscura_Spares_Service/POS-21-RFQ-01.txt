@@ -1,0 +1,1 @@
+Vermont Metals 2021 Punta Oscura Spares Service RFQ 01: 16,000 kW drive, 72 poles, 9.23 rpm, 34.5 kV supply, delivery in 40 weeks (simulated, not real).

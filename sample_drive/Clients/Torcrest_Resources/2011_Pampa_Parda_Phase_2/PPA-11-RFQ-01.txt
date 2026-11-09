@@ -1,0 +1,1 @@
+Torcrest Resources 2011 Pampa Parda Phase 2 RFQ 01: 19,000 kW drive, 56 poles, 12.28 rpm, 34.5 kV supply, delivery in 78 weeks (simulated, not real).

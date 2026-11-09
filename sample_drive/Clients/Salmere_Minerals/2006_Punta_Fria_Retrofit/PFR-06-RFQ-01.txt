@@ -1,0 +1,1 @@
+Salmere Minerals 2006 Punta Fria Retrofit RFQ 01: 13,500 kW drive, 72 poles, 11.58 rpm, 34.5 kV supply, delivery in 74 weeks (simulated, not real).

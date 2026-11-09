@@ -1,0 +1,1 @@
+Quenridge Metals 2007 Pampa Seca Phase 1 RFQ 01: 11,000 kW drive, 56 poles, 11.71 rpm, 34.5 kV supply, delivery in 44 weeks (simulated, not real).

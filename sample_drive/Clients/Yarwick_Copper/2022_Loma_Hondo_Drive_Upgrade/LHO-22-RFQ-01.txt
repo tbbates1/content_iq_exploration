@@ -1,0 +1,1 @@
+Yarwick Copper 2022 Loma Hondo Drive Upgrade RFQ 01: 13,500 kW drive, 88 poles, 11.99 rpm, 34.5 kV supply, delivery in 92 weeks (simulated, not real).

@@ -1,0 +1,1 @@
+Roswick Copper 2023 Cerro Hondo Drive Upgrade RFQ 01: 11,500 kW drive, 48 poles, 9.26 rpm, 34.5 kV supply, delivery in 64 weeks (simulated, not real).

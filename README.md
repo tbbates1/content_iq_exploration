@@ -1,82 +1,135 @@
-# Content IQ demo: synthetic gearless mill drive documents
+# ContentIQ exploration: project-scoped search over a client drive
 
-A fully fictional set of engineering documents for testing whether a search or RAG system can find answers across formats (PDF, DOCX, XLSX, drawing). Everything here is invented. The client, project, companies, places and values are not real, and the values are not engineering-accurate. The test checks retrieval and consistency only.
+Sales engineers answer RFQs from a deep client drive: `Clients/<client>/<year>_<project>/<files>`, with hundreds of similar projects. A question is usually about one project, or compares the current project with an older one. This repo shows how to answer such questions with Symplistic **ContentIQ** and **IBM watsonx Orchestrate (wxO)**, searching one project instead of the whole drive.
 
-## Fictional project
+ContentIQ indexes the drive but stores each file under its **file name only**, and a search can't be limited to a folder. So we add two wxO agents and a small **folder-map MCP server**. They work out which project folder a question is about, search ContentIQ, and keep only the passages from that project's files.
 
-- Client: Bramhall Copper Corp.
-- Project: Quebrada Azul Copper Expansion (Norte Alto Province, Calderón Verde)
-- Contractor: Ostrander Engineering Services Ltd.
-- Document prefix: QAZ
+Everything in the repo is fictional: clients, projects, sites and values.
 
-## Documents (`data/`)
+## Architecture
 
-| Folder | File | Type |
-|---|---|---|
-| `spec/` | `QAZ-EP-0000-265-SPC-00006-Q` (.pdf, .docx) | Gearless mill drive specification, 33 pages |
-| `datasheet/` | `QAZ-EP-0000-265-DST-00006-Q` (.pdf, .xlsx) | Drive datasheet, 18 pages, plus workbook |
-| `mill/` | `QAZ-EP-3100-255-DST-55017-Q.pdf` | Grinding mill data sheet, 38 pages |
-| `site/` | `QAZ-EP-0000-210-DBD-00002-B.pdf` | General site conditions, 9 pages |
-| `drawing/` | `QAZ-5200-265-E-001_B.pdf` | Single line diagram, 1 sheet |
+```mermaid
+flowchart LR
+    user(["Sales engineer"])
 
-## How to test
+    subgraph wxo["watsonx Orchestrate"]
+        rfq["RFQ Assistant<br/>(rfq_assistant)"]
+        ps["Project Searcher<br/>(project_searcher)"]
+        map["onedrive_map MCP toolkit<br/>find_projects · list_project_files<br/>match_sources · list_folder · map_info"]
+        tool["ContentIQ search tool<br/>symplisticai_tool_…"]
+    end
 
-Load the files in `data/` into the search or RAG source, then ask the questions below. The agent should answer from its index and does not see the files directly. Ask only the question sentence (the heading text), not the source notes.
+    subgraph ciq["ContentIQ"]
+        index[("Client-drive agent index<br/>files stored by name only")]
+    end
 
-A correct answer gives the value and the document it came from. A right value with no source is a partial pass. For Q4 and Q5, an answer that cites only one of the two sources is a partial pass. Some values also appear in other documents, and citing one of those is fine as long as the value is right.
+    drive[("OneDrive<br/>Clients/client/year_project/files")]
 
-Q1, Q2 and Q3 have one source. Q4 and Q5 need two sources at once. Q6 needs the drawing alone.
+    user -- "question" --> rfq
+    rfq -- "(1) which projects?" --> map
+    rfq -- "(2) one sub-question<br/>per project" --> ps
+    ps -- "(3) project files and<br/>search keywords" --> map
+    ps -- "(4) search" --> tool
+    tool -- "top 15 passages<br/>with file names" --> ps
+    tool <--> index
+    ps -- "(5) keep only this<br/>project's files" --> map
+    ps -- "facts + file names" --> rfq
+    rfq -- "answer per project" --> user
+    drive -- "OneDrive connector ingest" --> index
+    drive -. "build_map.py snapshot" .-> map
+```
 
----
+1. **RFQ Assistant** splits the question by project or time period ("the current Azul project" and "the one ten years ago") and resolves each part to a project folder with `find_projects`. If several projects fit, it asks the user which one.
+2. It sends each part to **Project Searcher**, together with the project path.
+3. Project Searcher calls `list_project_files` to get the project's file names and a search phrase (client, year, project).
+4. It searches ContentIQ through the search tool that ContentIQ created in wxO. Each call returns the top 15 passages from the whole drive, with their file names.
+5. `match_sources` compares those file names with the project's files. Only passages from this project are kept. A file name that exists in several projects is used only if the passage text names this project.
 
-## Q1. What seismic zone applies to the site, and what is the peak ground acceleration?
+More detail: [`docs/architecture/project-searcher.html`](docs/architecture/project-searcher.html) (open it locally in a browser) and [`backend/README.md`](backend/README.md).
 
-**Source (one):** `data/site/QAZ-EP-0000-210-DBD-00002-B.pdf`, **page 8**, section 2.6 Seismic Parameters: seismic zone **4**, PGA **0.42 g**.
+## What's in the repo
 
-**Expected answer:** Seismic zone 4, with a peak ground acceleration of 0.42 g.
+| Path | What it is |
+|---|---|
+| `sample_drive/Clients/` | Simulated client drive: 40 clients, 400 projects, 1,242 one-line RFQ files. Upload it to OneDrive. |
+| `backend/` | Folder-map MCP server (`onedrive_map/`), `build_map.py` and `smoke_test.py` |
+| `wxo/` | Agent definitions (`project_searcher.yaml`, `rfq_assistant.yaml`) and `ask.py`, which asks an agent through the API and prints every tool call |
+| `scripts/deploy_wxo.sh` | Builds the map, uploads the toolkit and imports both agents |
+| `data/` | Fictional gearless mill drive documents (PDF, DOCX, XLSX, drawing) for a single-project retrieval test |
+| `docs/` | [`FOLDER_SCOPING.md`](docs/FOLDER_SCOPING.md) (findings: why ContentIQ can't search a subfolder), [`CONTENTIQ_GUIDE.md`](docs/CONTENTIQ_GUIDE.md) (UI, setup, API), [`RETRIEVAL_TEST.md`](docs/RETRIEVAL_TEST.md) (Q1–Q6 on `data/`), and architecture diagrams |
 
----
+## Set it up
 
-## Q2. How many poles does the SAG mill drive motor have, and what is its rated speed?
+### What you need
 
-**Source (one):** `data/spec/QAZ-EP-0000-265-SPC-00006-Q.pdf`, **page 15**, section "Pole Count and Rated Speed": **72 poles**, **10.13 rpm**.
+- A **ContentIQ** tenant (Starter plan is enough) connected to your wxO instance (ContentIQ → Settings → watsonx Orchestrate). See [`docs/CONTENTIQ_GUIDE.md`](docs/CONTENTIQ_GUIDE.md), section 4.
+- A **watsonx Orchestrate** instance on IBM Cloud and an API key for it.
+- A **OneDrive** account linked to ContentIQ (OneDrive Connect). SharePoint works the same way.
+- Python 3.12.
 
-**Expected answer:** 72 poles, running at 10.13 rpm.
+### 1. Install
 
----
+```bash
+git clone https://github.com/tbbates1/content_iq_exploration.git
+cd content_iq_exploration
+python3.12 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+cp .env.example .env      # then fill in WXO_API_KEY and WXO_SERVICE_URL (and CONTENTIQ_API_KEY for the API examples)
+```
 
-## Q3. What is the full-load current of the motor control center at 380 V, and what is its rated power?
+### 2. Load the sample drive into ContentIQ
 
-**Source (one):** `data/datasheet/QAZ-EP-0000-265-DST-00006-Q.pdf`, **page 17**, motor control center table (3220-MCC-01): full-load current **855.7 A**, rated power **450 kW**.
+1. Upload the folder `sample_drive/Clients` to the top level of your OneDrive.
+2. In ContentIQ, open **Connect → OneDrive**, select the `Clients` folder and create a new agent for it, for example `Client_Drive`. ContentIQ creates a wxO agent with the same name and a search tool for it.
+3. Wait for the run to finish (**Ingest** page). It can take a few hours: in our test, ContentIQ processed about 6 small files per minute.
+4. Find the name of the search tool and put it in `.env` as `CONTENTIQ_WXO_TOOL`:
 
-**Expected answer:** 855.7 A at 380 V, for a 450 kW load.
+   ```bash
+   .venv/bin/orchestrate env add -n wxo -u "<WXO_SERVICE_URL>" --type ibm_iam
+   .venv/bin/orchestrate env activate wxo --api-key "<WXO_API_KEY>"
+   .venv/bin/orchestrate tools list -v | grep -oE 'symplisticai_tool[a-z0-9_]*' | sort -u
+   # e.g. symplisticai_tool_client_drive_a_1234abcd5678
+   ```
 
----
+### 3. Deploy the toolkit and agents to wxO
 
-## Q4. What is the SAG mill critical speed, and what percentage of critical is the operating speed?
+```bash
+scripts/deploy_wxo.sh
+```
 
-**Two sources (grinding mill data sheet PDF + datasheet workbook):**
-- **Source 1:** `data/mill/QAZ-EP-3100-255-DST-55017-Q.pdf`, **page 3**, SAG mill mechanical table: critical speed **13.51 rpm**, operating speed **10.13 rpm** (**75.0%** of critical).
-- **Source 2:** `data/datasheet/QAZ-EP-0000-265-DST-00006-Q.xlsx`, sheet **-01**, cell **D17** (critical speed **13.51**) and cell **D18** (**75.0%**).
+The script builds `backend/onedrive_map/folder_map.json` from `sample_drive/Clients`, runs the smoke test, uploads the `onedrive_map` toolkit (wxO hosts the server, so nothing runs on your machine), and imports `project_searcher` and `rfq_assistant`. The agents use `azure-openai/gpt-5.4`. If your instance doesn't offer that model, change `llm:` in `wxo/*.yaml` (`orchestrate models list`).
 
-**Expected answer:** The critical speed is 13.51 rpm. The operating speed of 10.13 rpm is 75.0% of critical.
+### 4. Ask
 
----
+```bash
+.venv/bin/python wxo/ask.py rfq_assistant \
+  "What drive power, pole count and supply voltage are in the RFQs for Bramhall Copper's 2021 Quebrada Azul Expansion, and what did we use on the 2016 Quebrada Azul Phase 1?"
+```
 
-## Q5. What is the full-load current of the ball mill drive at 34.5 kV?
+Or chat with **RFQ Assistant** in the wxO UI. Expected answer:
 
-**Two sources (diagram + datasheet):**
-- **Source 1:** `data/drawing/QAZ-5200-265-E-001_B.pdf`, **page 1**, callout **3210-MTR-02**: "12,000 kW, I_FL **217.9 A** at 34.5 kV".
-- **Source 2:** `data/datasheet/QAZ-EP-0000-265-DST-00006-Q.pdf`, **page 12**, 3210-MTR-02 electrical table: full-load current **217.9 A**.
+| Project | File | Drive power | Poles | Supply |
+|---|---|---|---|---|
+| 2021 Quebrada Azul Expansion | `QAZ-21-RFQ-01.txt`, `QAZ-21-RFQ-02.txt` | 16,500 kW | 72 | 34.5 kV |
+| 2016 Quebrada Azul Phase 1 | `QAZ-16-RFQ-01.txt` | 16,000 kW | 72 | 34.5 kV |
+| | `QAZ-16-RFQ-02.txt` | 24,500 kW | 48 | 34.5 kV |
+| | `QAZ-16-RFQ-03.txt` | 12,500 kW | 88 | 34.5 kV |
+| | `QAZ-16-RFQ-04.txt` | 24,500 kW | 64 | 34.5 kV |
 
-**Expected answer:** 217.9 A at 34.5 kV, for a 12,000 kW drive.
+A vague question should make the agent ask which project you mean instead of guessing:
 
----
+```bash
+.venv/bin/python wxo/ask.py rfq_assistant \
+  "What drive power and how many poles are in the current Azul project, and what did we use on the Azul installation ten years ago?"
+```
 
-## Q6. What is the rating and impedance of transformer 3210-XFR-02, and which bus feeds it? (drawing only)
+## Limits
 
-**Source (one):** `data/drawing/QAZ-5200-265-E-001_B.pdf`, **page 1**, callout **3210-XFR-02**: "20.0 MVA, 7.5% impedance, taps ±2 x 2.5% (5 positions), fed from 34.5 kV bus".
+- Each ContentIQ search covers the whole client-drive agent and returns its top 15 passages. `match_sources` can only drop passages from other projects. It can't bring in passages that didn't make the top 15. The one-line sample files name their project, which makes this look better than it will on real documents.
+- Files with the same name in different projects (90 names in the sample drive, shared by 187 files) may merge in ContentIQ, because it identifies files by name.
+- The folder map is a snapshot of `sample_drive/Clients`. Re-run `scripts/deploy_wxo.sh` after the drive changes. In production, the map would come from Microsoft Graph.
+- What would fix this on the ContentIQ side (a folder path per file, a folder or file filter on search) is listed in [`docs/FOLDER_SCOPING.md`](docs/FOLDER_SCOPING.md#what-to-ask-symplistic).
 
-**Expected answer:** 20.0 MVA, 7.5% impedance, fed from the 34.5 kV bus.
+## Single-project retrieval test
 
-**Why this is drawing-only:** the feed to the 34.5 kV bus appears only on the single line diagram. The rating and impedance also appear in other documents, so a correct answer may cite them, but the bus feed should come from the drawing.
+`data/` holds one fictional project's documents in several formats, with six test questions and expected answers in [`docs/RETRIEVAL_TEST.md`](docs/RETRIEVAL_TEST.md). Load `data/` into a separate ContentIQ agent (for example `Project_Files`) to check retrieval across PDF, DOCX, XLSX and drawings.

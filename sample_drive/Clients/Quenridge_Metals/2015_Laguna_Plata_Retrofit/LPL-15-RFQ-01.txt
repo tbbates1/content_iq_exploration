@@ -1,0 +1,1 @@
+Quenridge Metals 2015 Laguna Plata Retrofit RFQ 01: 20,500 kW drive, 88 poles, 8.53 rpm, 34.5 kV supply, delivery in 66 weeks (simulated, not real).

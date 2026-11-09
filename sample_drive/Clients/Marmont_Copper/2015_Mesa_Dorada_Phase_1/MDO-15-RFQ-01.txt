@@ -1,0 +1,1 @@
+Marmont Copper 2015 Mesa Dorada Phase 1 RFQ 01: 15,000 kW drive, 72 poles, 8.64 rpm, 34.5 kV supply, delivery in 82 weeks (simulated, not real).

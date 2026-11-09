@@ -1,0 +1,1 @@
+Corby Copper 2006 Mesa Seca Phase 1 RFQ 03: 22,500 kW drive, 96 poles, 9.86 rpm, 34.5 kV supply, delivery in 78 weeks (simulated, not real).

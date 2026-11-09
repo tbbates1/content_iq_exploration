@@ -1,0 +1,1 @@
+Marmont Copper 2010 Laguna Roja Phase 2 RFQ 04: 8,000 kW drive, 80 poles, 9.71 rpm, 34.5 kV supply, delivery in 98 weeks (simulated, not real).

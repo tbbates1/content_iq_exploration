@@ -1,0 +1,1 @@
+Kelwick Mining 2006 Llano Plata Retrofit RFQ 03: 23,000 kW drive, 48 poles, 10.49 rpm, 34.5 kV supply, delivery in 82 weeks (simulated, not real).

@@ -1,0 +1,1 @@
+Norvane Mining 2021 Cerro Oscura Phase 2 RFQ 01: 28,000 kW drive, 48 poles, 10.27 rpm, 34.5 kV supply, delivery in 104 weeks (simulated, not real).

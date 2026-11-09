@@ -1,0 +1,1 @@
+Corvale Mining 2006 Loma Larga Spares Service RFQ 01: 11,500 kW drive, 64 poles, 11.36 rpm, 34.5 kV supply, delivery in 80 weeks (simulated, not real).

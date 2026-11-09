@@ -1,0 +1,1 @@
+Torcrest Resources 2026 Cerro Azul Phase 2 RFQ 01: 26,000 kW drive, 56 poles, 11.26 rpm, 34.5 kV supply, delivery in 68 weeks (simulated, not real).

@@ -1,0 +1,1 @@
+Vermont Metals 2017 Mesa Alta Spares Service RFQ 01: 27,000 kW drive, 56 poles, 12.26 rpm, 34.5 kV supply, delivery in 62 weeks (simulated, not real).

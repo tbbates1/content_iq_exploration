@@ -1,0 +1,1 @@
+Yarridge Minerals 2008 Quebrada Roja Spares Service RFQ 01: 21,000 kW drive, 64 poles, 12.34 rpm, 34.5 kV supply, delivery in 60 weeks (simulated, not real).

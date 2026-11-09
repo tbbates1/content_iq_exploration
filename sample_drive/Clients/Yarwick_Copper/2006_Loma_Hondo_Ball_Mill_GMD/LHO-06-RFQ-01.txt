@@ -1,0 +1,1 @@
+Yarwick Copper 2006 Loma Hondo Ball Mill GMD RFQ 01: 26,000 kW drive, 80 poles, 8.69 rpm, 34.5 kV supply, delivery in 90 weeks (simulated, not real).

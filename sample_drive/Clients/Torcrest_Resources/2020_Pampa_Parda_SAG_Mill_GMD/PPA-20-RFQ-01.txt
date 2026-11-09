@@ -1,0 +1,1 @@
+Torcrest Resources 2020 Pampa Parda SAG Mill GMD RFQ 01: 12,000 kW drive, 72 poles, 10.81 rpm, 34.5 kV supply, delivery in 84 weeks (simulated, not real).

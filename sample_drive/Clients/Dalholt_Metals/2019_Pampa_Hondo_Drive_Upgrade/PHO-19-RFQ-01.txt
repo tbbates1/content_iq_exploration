@@ -1,0 +1,1 @@
+Dalholt Metals 2019 Pampa Hondo Drive Upgrade RFQ 01: 12,000 kW drive, 64 poles, 10.22 rpm, 34.5 kV supply, delivery in 50 weeks (simulated, not real).

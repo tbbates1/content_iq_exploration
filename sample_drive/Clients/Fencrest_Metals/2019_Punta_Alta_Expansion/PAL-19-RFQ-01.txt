@@ -1,0 +1,1 @@
+Fencrest Metals 2019 Punta Alta Expansion RFQ 01: 19,000 kW drive, 64 poles, 9.67 rpm, 34.5 kV supply, delivery in 100 weeks (simulated, not real).

@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Searcher Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --blue: #0f62fe;
+    --ink: #161616;
+    --ink-2: #525252;
+    --gray-line: #c6c6c6;
+    --gray-fill: #f4f4f4;
+    --sans: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+    --mono: 'IBM Plex Mono', Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #ffffff; color: var(--ink); }
+  body { font-family: var(--sans); font-size: 14px; line-height: 1.45; border-top: 4px solid var(--blue); }
+  .page { max-width: 1200px; margin: 0 auto; padding: 28px 32px 32px; }
+  .eyebrow { margin: 0; font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; }
+  h1 { margin: 6px 0 8px; font-size: 30px; font-weight: 300; letter-spacing: -0.01em; }
+  .lede { margin: 0; max-width: 78ch; font-size: 15px; color: var(--ink-2); }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  figure { margin: 20px 0 0; border: 1px solid var(--gray-line); padding: 12px; overflow-x: auto; }
+  figure svg { display: block; width: 100%; min-width: 880px; height: auto; }
+  figcaption { margin-top: 8px; font-size: 12px; color: var(--ink-2); }
+
+  svg .z   { font: 600 12px var(--sans); fill: var(--ink-2); letter-spacing: 0.02em; }
+  svg .t14 { font: 600 14px var(--sans); fill: var(--ink); }
+  svg .t13 { font: 600 13px var(--sans); fill: var(--ink); }
+  svg .s   { font: 400 12px var(--sans); fill: var(--ink-2); }
+  svg .r   { font: 400 12px var(--sans); fill: var(--ink); }
+  svg .l   { font: 400 11px var(--sans); fill: var(--ink-2); }
+  svg .lb  { font: 600 11px var(--sans); fill: var(--ink-2); }
+  svg .m   { font: 400 12px var(--mono); fill: var(--ink); }
+  svg .ml  { font: 400 11px var(--mono); fill: var(--ink-2); }
+  svg .n   { font: 600 11px var(--sans); fill: #ffffff; }
+  svg .nb  { font: 600 11px var(--sans); fill: var(--blue); }
+  svg .w   { font: 600 12px var(--sans); fill: #ffffff; }
+
+  .cols { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .col { border-top: 2px solid var(--ink); padding-top: 10px; }
+  .col.risk { border-top-color: var(--blue); }
+  .col h2 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+  .col ol, .col ul { margin: 0; padding-left: 18px; }
+  .col li { margin: 0 0 4px; }
+  code { font-family: var(--mono); font-size: 12.5px; background: var(--gray-fill); padding: 0 3px; }
+  footer { margin-top: 16px; font-size: 12px; color: var(--ink-2); }
+  footer a { color: var(--blue); }
+
+  @media screen and (max-width: 760px) {
+    .page { padding: 20px 16px 24px; }
+    h1 { font-size: 24px; }
+    .cols { grid-template-columns: 1fr; }
+  }
+  @page { size: A4 landscape; margin: 8mm; }
+  @media print {
+    body { zoom: 0.68; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 12px 0 0; }
+    figure { overflow: visible; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <p class="eyebrow">Content IQ demo · Architecture draft · 9 Nov 2026</p>
+  <h1>Project Searcher architecture</h1>
+  <p class="lede">One ContentIQ agent holds all of <code>Clients/</code>. Our own sub-agent, <strong>Project Searcher</strong>, searches it several ways and <strong>keeps only the passages from the chosen project's files</strong>, using a folder map we build from OneDrive.</p>
+
+  <figure>
+    <svg viewBox="0 0 1200 548" role="img" aria-label="RFQ Assistant sends each sub-question to Project Searcher. Project Searcher gets the project's file list from our folder map, searches one ContentIQ parent agent several times, and keeps only passages from that project's files. OneDrive feeds both the folder map, through Microsoft Graph, and ContentIQ, through OneDrive Connect.">
+      <defs>
+        <marker id="ah-blue" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#0f62fe"/>
+        </marker>
+        <marker id="ah-gray" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#6f6f6f"/>
+        </marker>
+      </defs>
+
+      <!-- Zones -->
+      <rect x="176" y="20" width="508" height="512" fill="#f4f4f4"/>
+      <text class="z" x="196" y="44">watsonx Orchestrate</text>
+      <rect x="744" y="228" width="220" height="128" fill="#f4f4f4"/>
+      <text class="z" x="760" y="248">Our backend</text>
+      <rect x="744" y="372" width="220" height="160" fill="#f4f4f4"/>
+      <text class="z" x="760" y="392">Symplistic ContentIQ</text>
+      <rect x="1000" y="228" width="180" height="304" fill="#f4f4f4"/>
+      <text class="z" x="1016" y="248">Microsoft OneDrive</text>
+
+      <!-- Legend -->
+      <rect x="760" y="78" width="24" height="16" fill="#ffffff" stroke="#0f62fe" stroke-width="2"/>
+      <text class="s" x="794" y="90">We build</text>
+      <rect x="960" y="78" width="24" height="16" fill="#ffffff" stroke="#8d8d8d"/>
+      <text class="s" x="994" y="90">Existing service</text>
+      <line x1="760" y1="118" x2="784" y2="118" stroke="#0f62fe" stroke-width="1.5" marker-end="url(#ah-blue)"/>
+      <text class="s" x="794" y="122">Question flow</text>
+      <line x1="960" y1="118" x2="984" y2="118" stroke="#6f6f6f" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ah-gray)"/>
+      <text class="s" x="994" y="122">Linked once, kept in sync</text>
+
+      <!-- Sales engineer -->
+      <rect x="20" y="72" width="128" height="64" fill="#ffffff" stroke="#8d8d8d"/>
+      <text class="t13" x="84" y="100" text-anchor="middle">Sales engineer</text>
+      <text class="s" x="84" y="118" text-anchor="middle">asks in chat</text>
+
+      <!-- 1 ask / 6 answer -->
+      <line x1="148" y1="92" x2="202" y2="92" stroke="#0f62fe" stroke-width="1.5" marker-end="url(#ah-blue)"/>
+      <line x1="204" y1="116" x2="150" y2="116" stroke="#0f62fe" stroke-width="1.5" marker-end="url(#ah-blue)"/>
+
+      <!-- RFQ Assistant -->
+      <rect x="204" y="64" width="240" height="80" fill="#ffffff" stroke="#0f62fe" stroke-width="2"/>
+      <text class="t14" x="220" y="92">RFQ Assistant</text>
+      <text class="s" x="220" y="112">Top agent. Splits the question</text>
+      <text class="s" x="220" y="128">and writes the answer.</text>
+
+      <!-- 2 delegate / facts back -->
+      <line x1="240" y1="144" x2="240" y2="206" stroke="#0f62fe" stroke-width="1.5" marker-end="url(#ah-blue)"/>
+      <text class="l" x="256" y="176">sub-question + project</text>
+      <line x1="412" y1="208" x2="412" y2="146" stroke="#0f62fe" stroke-width="1.5" marker-end="url(#ah-blue)"/>
+      <text class="l" x="402" y="196" text-anchor="end">facts + file names</text>
+
+      <!-- Project Searcher -->
+      <rect x="204" y="208" width="240" height="308" fill="#ffffff" stroke="#0f62fe" stroke-width="2"/>
+      <text class="t14" x="220" y="236">Project Searcher</text>
+      <text class="s" x="220" y="256">Our sub-agent</text>
+      <rect x="216" y="280" width="216" height="40" fill="#f4f4f4"/>
+      <text class="r" x="254" y="304">Find the project's files</text>
+      <text class="s" x="324" y="372" text-anchor="middle">Repeats 3 and 4 as needed</text>
+      <rect x="216" y="416" width="216" height="40" fill="#f4f4f4"/>
+      <text class="r" x="254" y="440">Search 2–4 different ways</text>
+      <rect x="216" y="464" width="216" height="40" fill="#0f62fe"/>
+      <text class="w" x="254" y="488">Keep this project only</text>
+
+      <!-- Searcher to tools -->
+      <line x1="434" y1="300" x2="510" y2="300" stroke="#0f62fe" stroke-width="1.5" marker-start="url(#ah-blue)" marker-end="url(#ah-blue)"/>
+      <line x1="434" y1="436" x2="510" y2="436" stroke="#0f62fe" stroke-width="1.5" marker-start="url(#ah-blue)" marker-end="url(#ah-blue)"/>
+
+      <!-- Tools -->
+      <rect x="512" y="276" width="152" height="48" fill="#ffffff" stroke="#0f62fe" stroke-width="2"/>
+      <text class="t13" x="528" y="296">Folder map tool</text>
+      <text class="l" x="528" y="313">our tool</text>
+      <rect x="512" y="412" width="152" height="48" fill="#ffffff" stroke="#8d8d8d"/>
+      <text class="t13" x="528" y="432">ContentIQ search</text>
+      <text class="l" x="528" y="449">existing tool</text>
+
+      <!-- Tools to services -->
+      <line x1="666" y1="300" x2="758" y2="300" stroke="#0f62fe" stroke-width="1.5" marker-start="url(#ah-blue)" marker-end="url(#ah-blue)"/>
+      <text class="l" x="712" y="291" text-anchor="middle">project</text>
+      <text class="l" x="712" y="316" text-anchor="middle">file list</text>
+      <line x1="666" y1="436" x2="758" y2="436" stroke="#0f62fe" stroke-width="1.5" marker-start="url(#ah-blue)" marker-end="url(#ah-blue)"/>
+      <text class="l" x="712" y="427" text-anchor="middle">query</text>
+      <text class="l" x="712" y="452" text-anchor="middle">15 passages</text>
+      <text class="l" x="712" y="465" text-anchor="middle">+ 1 table</text>
+
+      <!-- Folder map -->
+      <rect x="760" y="262" width="188" height="76" fill="#ffffff" stroke="#0f62fe" stroke-width="2"/>
+      <text class="t13" x="776" y="286">Folder map</text>
+      <text class="s" x="776" y="304">file path → client,</text>
+      <text class="s" x="776" y="320">project, date</text>
+
+      <!-- ContentIQ parent agent -->
+      <rect x="760" y="404" width="188" height="64" fill="#ffffff" stroke="#8d8d8d"/>
+      <text class="t13" x="776" y="428">Parent agent</text>
+      <text class="s" x="776" y="446">all projects, one index</text>
+      <text class="l" x="760" y="494">No folder filter.</text>
+      <text class="l" x="760" y="510"><tspan class="ml">source_hint</tspan> is ignored.</text>
+
+      <!-- OneDrive -->
+      <rect x="1016" y="262" width="148" height="254" fill="#ffffff" stroke="#8d8d8d"/>
+      <text class="m" x="1032" y="290">Clients/</text>
+      <path d="M1036 296 V310 H1046" fill="none" stroke="#8d8d8d"/>
+      <text class="m" x="1050" y="314">Client/</text>
+      <path d="M1054 320 V334 H1064" fill="none" stroke="#8d8d8d"/>
+      <text class="m" x="1068" y="338">Project/</text>
+      <path d="M1072 344 V358 H1082" fill="none" stroke="#8d8d8d"/>
+      <text class="m" x="1086" y="362">RFQ files</text>
+      <text class="lb" x="1032" y="404">Sample drive</text>
+      <text class="l" x="1032" y="422">40 clients</text>
+      <text class="l" x="1032" y="438">400 projects</text>
+      <text class="l" x="1032" y="454">1,242 files</text>
+
+      <!-- Ingest -->
+      <line x1="1014" y1="300" x2="950" y2="300" stroke="#6f6f6f" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ah-gray)"/>
+      <text class="l" x="982" y="291" text-anchor="middle">Graph sync</text>
+      <line x1="1014" y1="436" x2="950" y2="436" stroke="#6f6f6f" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ah-gray)"/>
+      <text class="l" x="982" y="414" text-anchor="middle">OneDrive</text>
+      <text class="l" x="982" y="427" text-anchor="middle">Connect</text>
+
+      <!-- Step numbers (drawn last, on top of lines) -->
+      <circle cx="175" cy="92" r="9" fill="#0f62fe"/><text class="n" x="175" y="96" text-anchor="middle">1</text>
+      <circle cx="175" cy="116" r="9" fill="#0f62fe"/><text class="n" x="175" y="120" text-anchor="middle">6</text>
+      <circle cx="240" cy="172" r="9" fill="#0f62fe"/><text class="n" x="240" y="176" text-anchor="middle">2</text>
+      <circle cx="236" cy="300" r="9" fill="#0f62fe"/><text class="n" x="236" y="304" text-anchor="middle">3</text>
+      <circle cx="236" cy="436" r="9" fill="#0f62fe"/><text class="n" x="236" y="440" text-anchor="middle">4</text>
+      <circle cx="236" cy="484" r="9" fill="#ffffff"/><text class="nb" x="236" y="488" text-anchor="middle">5</text>
+    </svg>
+    <figcaption>The numbers match the steps below. Project Searcher may run steps 3 and 4 several times for one sub-question.</figcaption>
+  </figure>
+
+  <section class="cols">
+    <div class="col">
+      <h2>How a question runs</h2>
+      <ol>
+        <li>A sales engineer asks a question in Orchestrate chat.</li>
+        <li>RFQ Assistant splits it and sends each part, with the project, to Project Searcher.</li>
+        <li>Project Searcher gets the project's file list from our folder map.</li>
+        <li>It searches ContentIQ 2–4 different ways. Each search returns 15 passages and 1 table, each with its file name.</li>
+        <li>It keeps only passages from the project's files and returns the facts.</li>
+        <li>RFQ Assistant writes the answer and names the files.</li>
+      </ol>
+    </div>
+    <div class="col">
+      <h2>Set up once</h2>
+      <ul>
+        <li>Link <code>Clients/</code> to one ContentIQ agent with OneDrive Connect.</li>
+        <li>Let our backend read <code>Clients/</code> through Microsoft Graph and keep the folder map in sync.</li>
+        <li>Give Project Searcher the folder map tool and the ContentIQ search tool.</li>
+      </ul>
+    </div>
+    <div class="col risk">
+      <h2>Open risks (tested 9 Nov 2026)</h2>
+      <ul>
+        <li>Each search covers all 400 projects and returns only the top 15. The right project's passages may not make the cut.</li>
+        <li><code>source_hint</code> doesn't filter. Ask Symplistic to make it fill the backend's <code>source_filter</code>.</li>
+        <li>Each search tool is tied to one ContentIQ agent. Attaching it to our own agent works (tested 2026-11-09).</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>Details: <a href="../FOLDER_SCOPING.md">FOLDER_SCOPING.md</a> · Earlier design, one agent per project: <a href="rfq-assistant.html">rfq-assistant.html</a></footer>
+</main>
+</body>
+</html>

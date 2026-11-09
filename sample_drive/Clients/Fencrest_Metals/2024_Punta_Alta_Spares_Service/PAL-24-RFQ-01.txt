@@ -1,0 +1,1 @@
+Fencrest Metals 2024 Punta Alta Spares Service RFQ 01: 18,500 kW drive, 64 poles, 10.51 rpm, 34.5 kV supply, delivery in 58 weeks (simulated, not real).

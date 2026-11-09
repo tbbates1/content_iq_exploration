@@ -1,0 +1,1 @@
+Bramhall Copper 2015 Cerro Plata Phase 1 RFQ 04: 10,500 kW drive, 56 poles, 8.91 rpm, 34.5 kV supply, delivery in 82 weeks (simulated, not real).

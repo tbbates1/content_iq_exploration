@@ -1,0 +1,1 @@
+Marmont Copper 2016 Laguna Roja Retrofit RFQ 02: 14,000 kW drive, 56 poles, 10.36 rpm, 34.5 kV supply, delivery in 72 weeks (simulated, not real).

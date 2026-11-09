@@ -1,0 +1,1 @@
+Yarwick Copper 2026 Loma Hondo Debottleneck RFQ 01: 21,500 kW drive, 72 poles, 9.36 rpm, 34.5 kV supply, delivery in 74 weeks (simulated, not real).

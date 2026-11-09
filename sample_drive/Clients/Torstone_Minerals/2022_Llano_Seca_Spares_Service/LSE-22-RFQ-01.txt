@@ -1,0 +1,1 @@
+Torstone Minerals 2022 Llano Seca Spares Service RFQ 01: 12,000 kW drive, 48 poles, 8.94 rpm, 34.5 kV supply, delivery in 88 weeks (simulated, not real).

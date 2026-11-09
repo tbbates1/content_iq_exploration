@@ -1,0 +1,1 @@
+Kelmont Copper 2006 Punta Clara Phase 1 RFQ 02: 10,000 kW drive, 88 poles, 8.77 rpm, 34.5 kV supply, delivery in 40 weeks (simulated, not real).

@@ -1,0 +1,1 @@
+Calvale Copper 2020 Valle Azul Spares Service RFQ 01: 8,000 kW drive, 88 poles, 9.66 rpm, 34.5 kV supply, delivery in 86 weeks (simulated, not real).

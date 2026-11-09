@@ -1,0 +1,23 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Generated: rebuild with `python backend/build_map.py`
+backend/onedrive_map/folder_map.json
+
+# Mirror of the third-party ContentIQ docs: rebuild with `python3 scripts/mirror_contentiq_docs.py`
+docs/contentiq/
+
+# Personal working notes, not needed to build the demo
+CLAUDE.md
+docs/emails/
+.claude/
+
+# OS
+.DS_Store

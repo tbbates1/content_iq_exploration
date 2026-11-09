@@ -1,0 +1,1 @@
+Belridge Resources 2023 Quebrada Plata Debottleneck RFQ 01: 15,000 kW drive, 56 poles, 8.73 rpm, 34.5 kV supply, delivery in 72 weeks (simulated, not real).

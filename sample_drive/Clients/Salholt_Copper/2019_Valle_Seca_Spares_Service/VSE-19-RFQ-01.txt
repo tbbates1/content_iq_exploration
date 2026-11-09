@@ -1,0 +1,1 @@
+Salholt Copper 2019 Valle Seca Spares Service RFQ 01: 26,500 kW drive, 64 poles, 12.33 rpm, 34.5 kV supply, delivery in 104 weeks (simulated, not real).

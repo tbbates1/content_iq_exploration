@@ -1,0 +1,1 @@
+Dalwick Copper 2019 Loma Azul Spares Service RFQ 01: 12,500 kW drive, 72 poles, 8.88 rpm, 34.5 kV supply, delivery in 58 weeks (simulated, not real).

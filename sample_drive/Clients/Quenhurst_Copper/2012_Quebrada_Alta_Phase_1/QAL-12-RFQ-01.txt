@@ -1,0 +1,1 @@
+Quenhurst Copper 2012 Quebrada Alta Phase 1 RFQ 01: 13,500 kW drive, 72 poles, 8.91 rpm, 34.5 kV supply, delivery in 64 weeks (simulated, not real).

@@ -1,0 +1,1 @@
+Kelmont Copper 2024 Punta Clara Drive Upgrade RFQ 01: 19,500 kW drive, 56 poles, 11.07 rpm, 34.5 kV supply, delivery in 100 weeks (simulated, not real).

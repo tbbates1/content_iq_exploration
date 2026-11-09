@@ -1,0 +1,1 @@
+Quenhurst Copper 2014 Valle Plata Phase 1 RFQ 01: 11,500 kW drive, 48 poles, 12.11 rpm, 34.5 kV supply, delivery in 96 weeks (simulated, not real).

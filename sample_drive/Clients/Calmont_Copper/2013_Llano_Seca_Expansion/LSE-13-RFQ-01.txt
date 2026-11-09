@@ -1,0 +1,1 @@
+Calmont Copper 2013 Llano Seca Expansion RFQ 01: 26,500 kW drive, 96 poles, 9.41 rpm, 34.5 kV supply, delivery in 62 weeks (simulated, not real).

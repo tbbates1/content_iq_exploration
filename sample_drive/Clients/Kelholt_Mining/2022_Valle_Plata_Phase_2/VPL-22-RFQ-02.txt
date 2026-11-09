@@ -1,0 +1,1 @@
+Kelholt Mining 2022 Valle Plata Phase 2 RFQ 02: 8,000 kW drive, 48 poles, 8.69 rpm, 34.5 kV supply, delivery in 102 weeks (simulated, not real).

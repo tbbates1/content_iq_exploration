@@ -1,0 +1,1 @@
+Corby Copper 2020 Cerro Larga Phase 2 RFQ 02: 18,500 kW drive, 64 poles, 8.99 rpm, 34.5 kV supply, delivery in 70 weeks (simulated, not real).

@@ -1,0 +1,1 @@
+Corvale Mining 2014 Loma Larga Phase 1 RFQ 03: 11,500 kW drive, 72 poles, 10.47 rpm, 34.5 kV supply, delivery in 104 weeks (simulated, not real).

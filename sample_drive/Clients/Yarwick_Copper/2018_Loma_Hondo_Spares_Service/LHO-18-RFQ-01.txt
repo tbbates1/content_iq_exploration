@@ -1,0 +1,1 @@
+Yarwick Copper 2018 Loma Hondo Spares Service RFQ 01: 17,000 kW drive, 96 poles, 11.02 rpm, 34.5 kV supply, delivery in 72 weeks (simulated, not real).

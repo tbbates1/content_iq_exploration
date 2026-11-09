@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RFQ Assistant Architecture</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@300;400;600&display=swap">
+<style>
+/* Layout: Carbon-style page. Full-width blue shell bar, one 1200px column, square tiles, diagrams in bordered wells. */
+:root {
+  --bg: #ffffff;
+  --zone: #f4f4f4;
+  --node: #ffffff;
+  --layer: #f4f4f4;
+  --layer-2: #e0e0e0;
+  --border: #e0e0e0;
+  --border-strong: #8d8d8d;
+  --text: #161616;
+  --text-2: #525252;
+  --text-3: #6f6f6f;
+  --blue: #0f62fe;
+  --blue-strong: #0043ce;
+  --blue-tint: #edf5ff;
+  --blue-tint-2: #d0e2ff;
+  --blue-text: #002d9c;
+  --on-blue: #ffffff;
+  --shell: #002d9c;
+  --shell-text: #ffffff;
+  --shell-sub: #d0e2ff;
+  --warn: #f1c21b;
+  --warn-tint: #fcf4d6;
+  --on-warn: #161616;
+  --sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161616; --zone: #1f1f1f; --node: #262626; --layer: #262626; --layer-2: #393939;
+    --border: #393939; --border-strong: #6f6f6f;
+    --text: #f4f4f4; --text-2: #c6c6c6; --text-3: #a8a8a8;
+    --blue: #78a9ff; --blue-strong: #a6c8ff; --blue-tint: #0b1a3d; --blue-tint-2: #002d9c; --blue-text: #d0e2ff; --on-blue: #161616;
+    --shell: #001d6c; --shell-text: #ffffff; --shell-sub: #a6c8ff;
+    --warn: #f1c21b; --warn-tint: #2e2914; --on-warn: #161616;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161616; --zone: #1f1f1f; --node: #262626; --layer: #262626; --layer-2: #393939;
+  --border: #393939; --border-strong: #6f6f6f;
+  --text: #f4f4f4; --text-2: #c6c6c6; --text-3: #a8a8a8;
+  --blue: #78a9ff; --blue-strong: #a6c8ff; --blue-tint: #0b1a3d; --blue-tint-2: #002d9c; --blue-text: #d0e2ff; --on-blue: #161616;
+  --shell: #001d6c; --shell-text: #ffffff; --shell-sub: #a6c8ff;
+  --warn: #f1c21b; --warn-tint: #2e2914; --on-warn: #161616;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1232px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Shell bar */
+.shell { background: var(--shell); color: var(--shell-text); }
+.shell-in { height: 48px; display: flex; align-items: center; gap: 12px; font-size: 14px; }
+.shell-name { font-weight: 600; }
+.shell-page { color: var(--shell-sub); }
+.shell-sep { width: 1px; height: 20px; background: var(--shell-sub); opacity: .5; }
+
+/* Hero */
+.hero { padding-block: 48px 32px; display: grid; gap: 16px; }
+.eyebrow { margin: 0; font-size: 14px; color: var(--blue-strong); letter-spacing: .16px; }
+h1 { margin: 0; font-weight: 300; font-size: clamp(2.25rem, 5vw, 3.25rem); line-height: 1.15; text-wrap: balance; }
+.lede { margin: 0; font-size: 20px; font-weight: 300; line-height: 1.4; color: var(--text-2); max-width: 58ch; }
+.plain { margin: 0; max-width: 64ch; }
+
+/* Sections */
+section { padding-block: 40px; border-top: 1px solid var(--border); }
+h2 { margin: 0 0 8px; font-size: 28px; font-weight: 400; line-height: 1.25; text-wrap: balance; }
+.sec-lede { margin: 0 0 24px; color: var(--text-2); max-width: 64ch; }
+
+/* Diagram wells */
+figure { margin: 0; }
+.well { border: 1px solid var(--border); background: var(--bg); overflow-x: auto; padding: 16px; }
+.well svg { display: block; width: 100%; height: auto; min-width: 940px; }
+figcaption { margin-top: 12px; font-size: 14px; color: var(--text-2); max-width: 90ch; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.key { display: inline-flex; align-items: center; gap: 8px; }
+.key i { display: inline-block; width: 28px; border-top: 2px solid var(--blue); }
+.key i.dash { border-top: 2px dashed var(--text-3); }
+
+/* SVG text and shapes */
+svg text { font-family: var(--sans); fill: var(--text); }
+.t-zone { font-size: 14px; font-weight: 600; }
+.t-big { font-size: 16px; font-weight: 600; }
+.t-title { font-size: 14px; font-weight: 600; }
+.t-title-sm { font-size: 13px; font-weight: 600; }
+.t-body { font-size: 12px; fill: var(--text-2); }
+.t-strong { font-size: 12px; font-weight: 600; }
+.t-small { font-size: 11px; fill: var(--text-3); }
+.t-mono { font-family: var(--mono); font-size: 11px; fill: var(--text-2); }
+svg .t-blue { fill: var(--blue-strong); }
+.zone { fill: var(--zone); stroke: var(--border); }
+.zone-wxo { fill: var(--blue-tint); stroke: var(--blue); }
+.node { fill: var(--node); stroke: var(--border-strong); }
+.node-sel { fill: var(--node); stroke: var(--blue); stroke-width: 2; }
+.dim { opacity: .45; }
+.row-sel { fill: var(--blue-tint-2); }
+.rule { stroke: var(--border); }
+.tag-blue { fill: var(--blue-tint-2); }
+.tag-gray { fill: var(--layer-2); }
+svg .tag-t { font-size: 11px; fill: var(--blue-text); }
+svg .tag-t-gray { font-size: 11px; fill: var(--text); }
+.flow { stroke: var(--blue); stroke-width: 1.5; fill: none; }
+.wire { stroke: var(--text-3); stroke-width: 1; fill: none; }
+.ingest { stroke: var(--text-3); stroke-width: 1.5; stroke-dasharray: 6 4; fill: none; }
+.mk-blue { fill: var(--blue); }
+.mk-gray { fill: var(--text-3); }
+.badge { fill: var(--blue); }
+svg .badge-t { font-size: 11px; font-weight: 600; fill: var(--on-blue); }
+.cyl { fill: var(--zone); stroke: var(--border-strong); }
+.cyl-sel { fill: var(--blue-tint-2); stroke: var(--blue); }
+.folder { fill: var(--blue-tint-2); stroke: var(--blue); }
+.bubble-a { fill: var(--node); stroke: var(--border-strong); }
+.bubble-u { fill: var(--blue-tint-2); }
+svg .bubble-u-t { font-size: 12px; fill: var(--text); }
+.chunk { fill: var(--zone); stroke: var(--border); }
+.chunk-match { fill: var(--blue-tint-2); stroke: var(--blue); }
+.warn-bar { fill: var(--warn); }
+.ok-bar { fill: var(--blue); }
+
+/* Steps (Carbon structured list) */
+.steps { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); max-width: 880px; }
+.steps li { display: grid; grid-template-columns: 28px 1fr; gap: 16px; padding-block: 14px; border-bottom: 1px solid var(--border); align-items: start; }
+.steps p { margin: 0; min-width: 0; }
+.num { width: 24px; height: 24px; border-radius: 50%; background: var(--blue); color: var(--on-blue); font-size: 12px; font-weight: 600; display: grid; place-items: center; margin-top: 1px; font-variant-numeric: tabular-nums; }
+.num.bg { background: transparent; border: 2px dashed var(--text-3); }
+.steps .muted { color: var(--text-2); }
+code, .mono { font-family: var(--mono); font-size: .875em; }
+
+/* Tiles */
+.tiles { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 600px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
+.tile { background: var(--layer); padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.tile .role { margin: 0; font-size: 12px; letter-spacing: .32px; color: var(--text-3); }
+.tile h3 { margin: -8px 0 0; font-size: 18px; font-weight: 600; line-height: 1.3; }
+.tile p.body { margin: 0; font-size: 14px; color: var(--text-2); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 12px; font-size: 12px; background: var(--blue-tint-2); color: var(--blue-text); }
+.tag.gray { background: var(--layer-2); color: var(--text); }
+
+/* Comparison */
+.cmp { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .cmp { grid-template-columns: 1fr 1fr; } }
+.cmp figure { border: 1px solid var(--border); padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.cmp h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.cmp svg { display: block; width: 100%; height: auto; }
+.cmp figcaption { margin: 0; }
+
+/* Notifications */
+.notes { display: grid; gap: 16px; max-width: 880px; }
+.note { display: grid; grid-template-columns: 20px 1fr; gap: 12px; padding: 14px 16px; border-left: 3px solid var(--blue); background: var(--blue-tint); font-size: 14px; }
+.note.warn { border-left-color: var(--warn); background: var(--warn-tint); }
+.note svg { width: 20px; height: 20px; margin-top: 1px; }
+.note-title { margin: 0 0 4px; font-weight: 600; }
+.note p { margin: 0; }
+.note ul, .note ol { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.note > div { min-width: 0; }
+
+footer { padding-block: 32px 48px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-3); }
+footer p { margin: 0; max-width: 90ch; }
+</style>
+</head>
+<body>
+
+<header class="shell">
+  <div class="wrap shell-in">
+    <span class="shell-name">Content IQ demo</span>
+    <span class="shell-sep" aria-hidden="true"></span>
+    <span class="shell-page">Architecture draft · 9 Nov 2026</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <p class="eyebrow">IBM watsonx Orchestrate · Symplistic ContentIQ · Microsoft OneDrive</p>
+    <h1>RFQ Assistant</h1>
+    <p class="lede">A sales engineer asks about an old job in Orchestrate chat. The answer comes from that job's files only, and says which file and page it came from.</p>
+    <p class="plain">Think of a records room with one cabinet per project. The RFQ Assistant reads your request and works out which cabinet you mean. ContentIQ then opens only that cabinet and reads you the page.</p>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <h2>How a question moves</h2>
+      <p class="sec-lede">Read it top to bottom. watsonx Orchestrate works out which project you mean. ContentIQ searches that project's files. OneDrive holds the files, and ContentIQ's built-in OneDrive Connect copies each project folder into its own agent.</p>
+      <figure>
+        <div class="well">
+          <svg viewBox="0 0 1200 806" role="img" aria-label="A question typed in Orchestrate chat goes to the RFQ Assistant agent in watsonx Orchestrate. The agent looks the project up in a catalog, then asks only that project's ContentIQ agent. Each ContentIQ agent has its own index, filled from one OneDrive folder by ContentIQ's built-in OneDrive Connect.">
+            <defs>
+              <marker id="m-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-blue" d="M0,0 L10,5 L0,10 z"/></marker>
+              <marker id="m-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-gray" d="M0,0 L10,5 L0,10 z"/></marker>
+            </defs>
+
+            <!-- ============ watsonx Orchestrate ============ -->
+            <rect class="zone-wxo" x="16" y="16" width="1168" height="344"/>
+            <text class="t-zone" x="32" y="42">IBM watsonx Orchestrate</text>
+
+            <!-- Chat -->
+            <rect class="node" x="40" y="64" width="260" height="128"/>
+            <text class="t-title" x="56" y="88">Orchestrate chat</text>
+            <text class="t-small" x="56" y="106">where the sales engineer asks</text>
+            <text class="t-body" x="56" y="134">“Use the GMD spec from the Quebrada</text>
+            <text class="t-body" x="56" y="152">Azul mill ~5 years ago. How many</text>
+            <text class="t-body" x="56" y="170">poles, and what rated speed?”</text>
+
+            <!-- Router agent -->
+            <rect class="node-sel" x="380" y="64" width="320" height="128"/>
+            <text class="t-big" x="396" y="90">RFQ Assistant</text>
+            <rect class="tag-blue" x="644" y="76" width="44" height="20" rx="10"/>
+            <text class="tag-t" x="666" y="90" text-anchor="middle">agent</text>
+            <text class="t-body" x="396" y="116">Works out which project you mean</text>
+            <text class="t-body" x="396" y="134">Asks you first if two projects match</text>
+            <text class="t-body" x="396" y="152">Asks only that project's ContentIQ agent</text>
+            <text class="t-body" x="396" y="170">Says which project and file the answer is from</text>
+
+            <!-- Confirmation example -->
+            <text class="t-strong" x="780" y="82">If more than one project matches</text>
+            <rect class="bubble-a" x="780" y="94" width="320" height="56"/>
+            <text class="t-body" x="794" y="117">Two Quebrada Azul jobs match. About 5</text>
+            <text class="t-body" x="794" y="135">years ago is the 2021 Expansion. Use it?</text>
+            <text class="t-small" x="780" y="183">Shown in the chat</text>
+            <rect class="bubble-u" x="960" y="160" width="200" height="36"/>
+            <text class="bubble-u-t" x="976" y="183">Yes, the 2021 Expansion.</text>
+
+            <!-- Catalog -->
+            <rect class="node" x="40" y="216" width="260" height="128"/>
+            <text class="t-title" x="56" y="238">Project catalog</text>
+            <text class="t-small" x="56" y="254">table the Find project tool reads</text>
+            <text class="t-small" x="56" y="270">Project</text>
+            <text class="t-small" x="180" y="270">Year</text>
+            <text class="t-small" x="222" y="270">Agent ID</text>
+            <line class="rule" x1="48" y1="276" x2="292" y2="276"/>
+            <rect class="row-sel" x="48" y="300" width="244" height="20"/>
+            <text class="t-body" x="56" y="294">QAZ Phase 1</text>
+            <text class="t-body" x="180" y="294">2016</text>
+            <text class="t-mono" x="222" y="294">ciq-qaz16</text>
+            <text class="t-strong" x="56" y="314">QAZ Expansion</text>
+            <text class="t-strong" x="180" y="314">2021</text>
+            <text class="t-mono" x="222" y="314">ciq-qaz21</text>
+            <text class="t-body" x="56" y="334">Cerro Plata RFQ</text>
+            <text class="t-body" x="180" y="334">2026</text>
+            <text class="t-mono" x="222" y="334">ciq-cp26</text>
+
+            <!-- Tools -->
+            <line class="wire" x1="455" y1="192" x2="455" y2="239" marker-end="url(#m-gray)"/>
+            <text class="t-small" x="463" y="220">uses</text>
+            <line class="wire" x1="625" y1="192" x2="625" y2="239" marker-end="url(#m-gray)"/>
+            <text class="t-small" x="633" y="220">uses</text>
+
+            <rect class="node" x="380" y="240" width="150" height="64"/>
+            <text class="t-title" x="396" y="264">Find project</text>
+            <rect class="tag-gray" x="490" y="250" width="32" height="20" rx="10"/>
+            <text class="tag-t-gray" x="506" y="264" text-anchor="middle">tool</text>
+            <text class="t-body" x="396" y="290">reads the catalog</text>
+
+            <rect class="node" x="550" y="240" width="150" height="64"/>
+            <text class="t-title" x="566" y="264">Ask project</text>
+            <rect class="tag-gray" x="660" y="250" width="32" height="20" rx="10"/>
+            <text class="tag-t-gray" x="676" y="264" text-anchor="middle">tool</text>
+            <text class="t-body" x="566" y="290">calls ContentIQ chat</text>
+
+            <text class="t-body" x="740" y="264">ContentIQ agents are also wxO agents, so</text>
+            <text class="t-body" x="740" y="282">Ask project calls them by their wxO agent ID.</text>
+
+            <!-- Question flow inside wxO -->
+            <line class="flow" x1="300" y1="104" x2="379" y2="104" marker-end="url(#m-blue)"/>
+            <text class="t-small" x="340" y="90" text-anchor="middle">question</text>
+            <circle class="badge" cx="340" cy="104" r="9"/><text class="badge-t" x="340" y="108" text-anchor="middle">1</text>
+
+            <line class="flow" x1="380" y1="262" x2="301" y2="262" marker-end="url(#m-blue)"/>
+            <text class="t-small" x="340" y="248" text-anchor="middle">look up</text>
+            <circle class="badge" cx="340" cy="262" r="9"/><text class="badge-t" x="340" y="266" text-anchor="middle">2</text>
+
+            <line class="flow" x1="300" y1="290" x2="379" y2="290" marker-end="url(#m-blue)"/>
+            <text class="t-small" x="340" y="314" text-anchor="middle">agent ID</text>
+            <circle class="badge" cx="340" cy="290" r="9"/><text class="badge-t" x="340" y="294" text-anchor="middle">3</text>
+
+            <line class="flow" x1="380" y1="152" x2="301" y2="152" marker-end="url(#m-blue)"/>
+            <text class="t-small" x="340" y="174" text-anchor="middle">answer</text>
+            <circle class="badge" cx="340" cy="152" r="9"/><text class="badge-t" x="340" y="156" text-anchor="middle">6</text>
+
+            <!-- ============ ContentIQ ============ -->
+            <rect class="zone" x="16" y="400" width="1168" height="240"/>
+            <text class="t-zone" x="32" y="426">Symplistic ContentIQ</text>
+            <text class="t-strong" x="1160" y="426" text-anchor="end">Each agent searches only its own index</text>
+
+            <g class="dim">
+              <rect class="node" x="40" y="444" width="340" height="88"/>
+              <text class="t-title" x="56" y="470">QAZ Phase 1 · 2016</text>
+              <path class="cyl" d="M330,460 v20 a14,4 0 0 0 28,0 v-20"/>
+              <ellipse class="cyl" cx="344" cy="460" rx="14" ry="4"/>
+              <text class="t-mono" x="56" y="494">reads 2016_Phase1/ only</text>
+              <text class="t-body" x="56" y="514">older spec and datasheets</text>
+            </g>
+
+            <rect class="node-sel" x="430" y="444" width="340" height="88"/>
+            <text class="t-title" x="446" y="470">QAZ Expansion · 2021</text>
+            <path class="cyl-sel" d="M720,460 v20 a14,4 0 0 0 28,0 v-20"/>
+            <ellipse class="cyl-sel" cx="734" cy="460" rx="14" ry="4"/>
+            <text class="t-mono" x="446" y="494">reads 2021_Expansion/ only</text>
+            <text class="t-body" x="446" y="514">spec, datasheets, mill, site, drawing</text>
+
+            <g class="dim">
+              <rect class="node" x="820" y="444" width="340" height="88"/>
+              <text class="t-title" x="836" y="470">Cerro Plata RFQ · 2026</text>
+              <path class="cyl" d="M1110,460 v20 a14,4 0 0 0 28,0 v-20"/>
+              <ellipse class="cyl" cx="1124" cy="460" rx="14" ry="4"/>
+              <text class="t-mono" x="836" y="494">reads 2026_RFQ/ only</text>
+              <text class="t-body" x="836" y="514">the RFQ being written now</text>
+            </g>
+
+            <!-- Built-in connector -->
+            <rect class="node" x="40" y="560" width="1120" height="60"/>
+            <text class="t-title" x="56" y="584">OneDrive Connect</text>
+            <rect class="tag-gray" x="186" y="570" width="116" height="20" rx="10"/>
+            <text class="tag-t-gray" x="244" y="584" text-anchor="middle">built-in connector</text>
+            <text class="t-body" x="56" y="606">Copies each selected folder into one agent's index. Nightly for live RFQs, once for closed jobs.</text>
+
+            <!-- Question flow wxO <-> ContentIQ -->
+            <line class="flow" x1="605" y1="304" x2="605" y2="443" marker-end="url(#m-blue)"/>
+            <text class="t-small" x="593" y="384" text-anchor="end">question + agent ID</text>
+            <circle class="badge" cx="605" cy="380" r="9"/><text class="badge-t" x="605" y="384" text-anchor="middle">4</text>
+
+            <line class="flow" x1="645" y1="444" x2="645" y2="305" marker-end="url(#m-blue)"/>
+            <text class="t-small" x="657" y="384">answer + source page</text>
+            <circle class="badge" cx="645" cy="380" r="9"/><text class="badge-t" x="645" y="384" text-anchor="middle">5</text>
+
+            <!-- ============ OneDrive ============ -->
+            <rect class="zone" x="16" y="680" width="1168" height="110"/>
+            <text class="t-zone" x="32" y="706">Microsoft OneDrive</text>
+            <text class="t-body" x="1160" y="706" text-anchor="end">Signed in once. Each agent gets one folder, picked by hand or by a setup script.</text>
+
+            <g class="dim">
+              <rect class="node" x="40" y="720" width="340" height="54"/>
+              <path class="folder" d="M56,736 h6 l2,3 h8 v10 h-16 z"/>
+              <text class="t-mono" x="80" y="746">Bramhall/Quebrada Azul/2016_Phase1/</text>
+              <text class="t-small" x="80" y="764">closed job · loaded once</text>
+            </g>
+            <rect class="node-sel" x="430" y="720" width="340" height="54"/>
+            <path class="folder" d="M446,736 h6 l2,3 h8 v10 h-16 z"/>
+            <text class="t-mono t-blue" x="470" y="746">Bramhall/Quebrada Azul/2021_Expansion/</text>
+            <text class="t-small" x="470" y="764">closed job · the files in data/</text>
+            <g class="dim">
+              <rect class="node" x="820" y="720" width="340" height="54"/>
+              <path class="folder" d="M836,736 h6 l2,3 h8 v10 h-16 z"/>
+              <text class="t-mono" x="860" y="746">Cerro Plata/2026_RFQ/</text>
+              <text class="t-small" x="860" y="764">live RFQ · refreshed nightly</text>
+            </g>
+
+            <!-- File copy: folder -> connector -> agent -->
+            <line class="ingest" x1="210" y1="720" x2="210" y2="622" marker-end="url(#m-gray)"/>
+            <line class="ingest" x1="210" y1="560" x2="210" y2="534" marker-end="url(#m-gray)"/>
+            <line class="ingest" x1="600" y1="720" x2="600" y2="622" marker-end="url(#m-gray)"/>
+            <line class="ingest" x1="600" y1="560" x2="600" y2="534" marker-end="url(#m-gray)"/>
+            <line class="ingest" x1="990" y1="720" x2="990" y2="622" marker-end="url(#m-gray)"/>
+            <line class="ingest" x1="990" y1="560" x2="990" y2="534" marker-end="url(#m-gray)"/>
+          </svg>
+        </div>
+        <figcaption>
+          <span class="key"><i aria-hidden="true"></i>A question being answered, in numbered order</span>
+          <span class="key"><i class="dash" aria-hidden="true"></i>Files copied from OneDrive by ContentIQ's built-in connector</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>What happens when you ask</h2>
+      <p class="sec-lede">The numbers match the blue arrows above. The example answer is real: it comes from the spec in <code>data/spec/</code>.</p>
+      <ol class="steps">
+        <li><span class="num">1</span><p><strong>You ask in Orchestrate chat.</strong> <span class="muted">“Use the GMD spec from the Quebrada Azul mill about 5 years ago. How many poles, and what rated speed?”</span></p></li>
+        <li><span class="num">2</span><p><strong>The RFQ Assistant looks up the project.</strong> <span class="muted">Its Find project tool searches the catalog for Quebrada Azul around 2021.</span></p></li>
+        <li><span class="num">3</span><p><strong>It confirms which job, then gets its agent ID.</strong> <span class="muted">Two Quebrada Azul jobs match, so it asks you to confirm the 2021 Expansion before going further.</span></p></li>
+        <li><span class="num">4</span><p><strong>It asks that one ContentIQ agent.</strong> <span class="muted">The Ask project tool sends the question with the 2021 Expansion agent ID and nothing else.</span></p></li>
+        <li><span class="num">5</span><p><strong>ContentIQ searches only that project's index.</strong> <span class="muted">It answers 72 poles at 10.13 rpm, from <span class="mono">QAZ-EP-0000-265-SPC-00006-Q</span>, page 15.</span></p></li>
+        <li><span class="num">6</span><p><strong>You get the answer in the chat, labelled with the project.</strong> <span class="muted">“QAZ Expansion (2021): 72 poles, 10.13 rpm. Source: GMD spec, page 15.”</span></p></li>
+        <li><span class="num bg" aria-hidden="true"></span><p><strong>In the background,</strong> <span class="muted">ContentIQ's built-in OneDrive Connect keeps each project's index in step with its folder. Live RFQs refresh nightly. Closed jobs are loaded once.</span></p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Who does what</h2>
+      <p class="sec-lede">You connect OneDrive to ContentIQ once, with its built-in OneDrive Connect. After that, each ContentIQ agent is pointed at one project folder.</p>
+      <div class="tiles">
+        <article class="tile">
+          <p class="role">Coordinator</p>
+          <h3>watsonx Orchestrate</h3>
+          <div class="tags"><span class="tag">chat</span><span class="tag">1 agent</span><span class="tag">2 tools</span></div>
+          <p class="body">Where people ask. The RFQ Assistant reads the question, works out which project it is about, and passes it to that project's ContentIQ agent. It doesn't search files itself.</p>
+        </article>
+        <article class="tile">
+          <p class="role">Lookup table</p>
+          <h3>Project catalog</h3>
+          <div class="tags"><span class="tag">1 row per project</span></div>
+          <p class="body">Client, site, year, equipment, folder and ContentIQ agent ID. This is how “the mill from about 5 years ago” becomes one specific project.</p>
+        </article>
+        <article class="tile">
+          <p class="role">Reader</p>
+          <h3>Symplistic ContentIQ</h3>
+          <div class="tags"><span class="tag">1 agent per project</span><span class="tag">own index</span></div>
+          <p class="body">Copies each project folder, splits the files into chunks and searches them. Each project gets its own agent and index, so a search can't drift into another job.</p>
+        </article>
+        <article class="tile">
+          <p class="role">Files</p>
+          <h3>Microsoft OneDrive</h3>
+          <div class="tags"><span class="tag gray">OneDrive Connect</span><span class="tag gray">1 folder per project</span></div>
+          <p class="body">Where the files live. One folder per project, for example <span class="mono">Client/Site/Year_Project/</span>, so each agent can be pointed at exactly one job.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Why not one agent for everything</h2>
+      <p class="sec-lede">ContentIQ has no folder filter when you ask a question. Its chat call takes an agent ID, a message and a thread ID, and the agent searches everything it holds. File names help a little, because each document number starts with the project code, but they don't keep other projects out.</p>
+      <div class="cmp">
+        <figure>
+          <h3>One agent holds every project</h3>
+          <svg viewBox="0 0 560 280" role="img" aria-label="With one shared index, the question matches both the 2016 and the 2021 spec, so the answer may mix their values.">
+            <defs><marker id="a-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-blue" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+            <rect class="node" x="16" y="92" width="150" height="96"/>
+            <text class="t-title" x="28" y="116">Question</text>
+            <text class="t-body" x="28" y="138">“Poles on the Quebrada</text>
+            <text class="t-body" x="28" y="154">Azul mill, about</text>
+            <text class="t-body" x="28" y="170">5 years ago?”</text>
+            <line class="flow" x1="166" y1="140" x2="211" y2="140" marker-end="url(#a-blue)"/>
+
+            <rect class="node" x="212" y="20" width="184" height="240"/>
+            <text class="t-title" x="224" y="44">One shared index</text>
+            <rect class="chunk-match" x="224" y="58" width="160" height="28"/>
+            <text class="t-body" x="232" y="76">2016 Phase 1 spec</text>
+            <text class="t-small t-blue" x="376" y="76" text-anchor="end">match</text>
+            <rect class="chunk" x="224" y="94" width="160" height="28"/>
+            <text class="t-body" x="232" y="112">2026 Cerro Plata RFQ</text>
+            <rect class="chunk-match" x="224" y="130" width="160" height="28"/>
+            <text class="t-body" x="232" y="148">2021 Expansion spec</text>
+            <text class="t-small t-blue" x="376" y="148" text-anchor="end">match</text>
+            <rect class="chunk" x="224" y="166" width="160" height="28"/>
+            <text class="t-body" x="232" y="184">2016 Phase 1 datasheet</text>
+            <rect class="chunk" x="224" y="202" width="160" height="28"/>
+            <text class="t-body" x="232" y="220">2026 RFQ drawings</text>
+            <line class="flow" x1="396" y1="140" x2="427" y2="140" marker-end="url(#a-blue)"/>
+
+            <rect class="node" x="428" y="92" width="116" height="96"/>
+            <rect class="warn-bar" x="428" y="92" width="4" height="96"/>
+            <text class="t-title" x="442" y="116">Answer</text>
+            <text class="t-body" x="442" y="138">may mix the</text>
+            <text class="t-body" x="442" y="154">2016 and 2021</text>
+            <text class="t-body" x="442" y="170">values</text>
+          </svg>
+          <figcaption>Two specs from the same site match equally well. The answer can blend them, and that is a real risk when you copy a spec into a new RFQ.</figcaption>
+        </figure>
+        <figure>
+          <h3>One agent per project, with a coordinator in front</h3>
+          <svg viewBox="0 0 560 280" role="img" aria-label="With one agent per project, the RFQ Assistant picks the 2021 Expansion, only that index is searched, and the answer is 72 poles at 10.13 rpm from spec page 15.">
+            <defs><marker id="b-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-blue" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+            <rect class="node" x="16" y="92" width="108" height="96"/>
+            <text class="t-title" x="28" y="116">Question</text>
+            <text class="t-body" x="28" y="138">Same</text>
+            <text class="t-body" x="28" y="154">question</text>
+            <line class="flow" x1="124" y1="140" x2="145" y2="140" marker-end="url(#b-blue)"/>
+
+            <rect class="node-sel" x="146" y="92" width="120" height="96"/>
+            <text class="t-title" x="158" y="116">RFQ Assistant</text>
+            <text class="t-body" x="158" y="138">picks the 2021</text>
+            <text class="t-body" x="158" y="154">Expansion</text>
+            <line class="flow" x1="266" y1="140" x2="295" y2="140" marker-end="url(#b-blue)"/>
+
+            <g class="dim">
+              <rect class="node" x="296" y="20" width="136" height="64"/>
+              <text class="t-title-sm" x="308" y="46">2016 Phase 1</text>
+              <text class="t-small" x="308" y="66">not searched</text>
+            </g>
+            <rect class="node-sel" x="296" y="108" width="136" height="64"/>
+            <text class="t-title-sm" x="308" y="134">2021 Expansion</text>
+            <text class="t-small t-blue" x="308" y="154">searched</text>
+            <g class="dim">
+              <rect class="node" x="296" y="196" width="136" height="64"/>
+              <text class="t-title-sm" x="308" y="222">2026 Cerro Plata</text>
+              <text class="t-small" x="308" y="242">not searched</text>
+            </g>
+            <line class="flow" x1="432" y1="140" x2="447" y2="140" marker-end="url(#b-blue)"/>
+
+            <rect class="node" x="448" y="92" width="96" height="96"/>
+            <rect class="ok-bar" x="448" y="92" width="4" height="96"/>
+            <text class="t-title" x="460" y="116">Answer</text>
+            <text class="t-body" x="460" y="138">72 poles,</text>
+            <text class="t-body" x="460" y="154">10.13 rpm</text>
+            <text class="t-mono" x="460" y="172">spec p.15</text>
+          </svg>
+          <figcaption>The coordinator adds one step, picking the project. In return only one index is searched, and the answer comes from one job.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Before building it</h2>
+      <p class="sec-lede">The design works on paper. These limits and open questions decide how far it scales.</p>
+      <div class="notes">
+        <div class="note" role="note">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="var(--blue)"/><rect x="9.1" y="8.5" width="1.8" height="6" fill="var(--on-blue)"/><rect x="9.1" y="5" width="1.8" height="1.8" fill="var(--on-blue)"/></svg>
+          <div>
+            <p class="note-title">Does someone have to link every project folder by hand?</p>
+            <p>Signing in to OneDrive happens once. After that, each project needs its own agent pointed at its own folder. In the UI that is one pick per project. A setup script could do it instead: list the folders with <code>ciq_onedrive_list_files</code>, start <code>ciq_onedrive_ingest</code> with the folder and the project's agent ID, and add the catalog row. It would run whenever a new project folder appears, and people keep saving files to OneDrive as they do today.</p>
+            <p style="margin-top:8px">If that is still too many agents, use one agent per client instead. You get fewer agents, but projects for the same client share an index again.</p>
+          </div>
+        </div>
+        <div class="note warn" role="note">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.5 L19 18 H1 Z" fill="var(--warn)"/><rect x="9.1" y="7" width="1.8" height="6" fill="var(--on-warn)"/><rect x="9.1" y="14.3" width="1.8" height="1.8" fill="var(--on-warn)"/></svg>
+          <div>
+            <p class="note-title">Limits on our Starter plan</p>
+            <ul>
+              <li>Only 1 scheduled ingest, so only one live RFQ refreshes on its own. Essentials Plus allows 3. Closed jobs don't need a schedule.</li>
+              <li>One ingest at a time per API key, so loading years of old RFQs runs one project after another. Our 7 test files took about 4 hours per full run.</li>
+              <li>5 GB of storage. A real RFQ archive will be far larger.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="note" role="note">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="var(--blue)"/><rect x="9.1" y="8.5" width="1.8" height="6" fill="var(--on-blue)"/><rect x="9.1" y="5" width="1.8" height="1.8" fill="var(--on-blue)"/></svg>
+          <div>
+            <p class="note-title">Questions for Symplistic</p>
+            <ol>
+              <li>Can chat filter by folder or file metadata? If it can, one big agent with a filter is simpler than one agent per project.</li>
+              <li>How many agents can one tenant have, and what does each cost?</li>
+              <li>Can the API run a “changed and new” ingest without a schedule, so a nightly script could refresh many project agents?</li>
+              <li>OneDrive Connect signs in as one account. Does everyone who asks then see answers from every file that account can open?</li>
+              <li>Can the API ingest a whole OneDrive folder, and create the agent in the same call? That decides whether the setup script is possible.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Based on the ContentIQ docs and the watsonx Orchestrate ADK docs. All projects and companies are fictional. Only the QAZ Expansion files exist in <code>data/</code>. The years, the 2016 Phase 1 and 2026 Cerro Plata jobs, and the agent IDs are examples.</p>
+  </div>
+</footer>
+</body>
+</html>

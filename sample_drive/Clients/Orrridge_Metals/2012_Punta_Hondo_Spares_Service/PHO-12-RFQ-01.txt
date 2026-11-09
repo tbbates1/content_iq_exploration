@@ -1,0 +1,1 @@
+Orrridge Metals 2012 Punta Hondo Spares Service RFQ 01: 14,000 kW drive, 72 poles, 10.67 rpm, 34.5 kV supply, delivery in 76 weeks (simulated, not real).

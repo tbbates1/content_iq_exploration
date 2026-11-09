@@ -1,0 +1,1 @@
+Belridge Resources 2013 Quebrada Plata Phase 1 RFQ 01: 23,000 kW drive, 64 poles, 10.54 rpm, 34.5 kV supply, delivery in 90 weeks (simulated, not real).

@@ -1,0 +1,1 @@
+Kelwick Mining 2011 Llano Seca Retrofit RFQ 02: 10,000 kW drive, 96 poles, 11.65 rpm, 34.5 kV supply, delivery in 72 weeks (simulated, not real).

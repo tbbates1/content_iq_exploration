@@ -1,0 +1,1 @@
+Dalholt Metals 2015 Llano Clara Drive Upgrade RFQ 01: 14,000 kW drive, 96 poles, 10.39 rpm, 34.5 kV supply, delivery in 66 weeks (simulated, not real).

@@ -1,0 +1,1 @@
+Dalwick Copper 2007 Llano Clara Expansion RFQ 01: 16,500 kW drive, 88 poles, 9.81 rpm, 34.5 kV supply, delivery in 88 weeks (simulated, not real).

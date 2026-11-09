@@ -1,0 +1,1 @@
+Torcrest Resources 2018 Mesa Parda Debottleneck RFQ 01: 27,000 kW drive, 72 poles, 10.35 rpm, 34.5 kV supply, delivery in 44 weeks (simulated, not real).

@@ -1,0 +1,1 @@
+Salholt Copper 2009 Loma Seca Phase 2 RFQ 03: 10,000 kW drive, 88 poles, 8.69 rpm, 34.5 kV supply, delivery in 86 weeks (simulated, not real).

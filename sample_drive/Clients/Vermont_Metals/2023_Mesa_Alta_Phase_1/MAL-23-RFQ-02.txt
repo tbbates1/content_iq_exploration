@@ -1,0 +1,1 @@
+Vermont Metals 2023 Mesa Alta Phase 1 RFQ 02: 11,500 kW drive, 64 poles, 11.5 rpm, 34.5 kV supply, delivery in 96 weeks (simulated, not real).

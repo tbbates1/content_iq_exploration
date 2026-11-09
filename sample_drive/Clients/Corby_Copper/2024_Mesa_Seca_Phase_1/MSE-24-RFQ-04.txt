@@ -1,0 +1,1 @@
+Corby Copper 2024 Mesa Seca Phase 1 RFQ 04: 27,500 kW drive, 64 poles, 9.75 rpm, 34.5 kV supply, delivery in 82 weeks (simulated, not real).

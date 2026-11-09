@@ -1,0 +1,1 @@
+Kelmont Copper 2017 Punta Clara Debottleneck RFQ 02: 15,500 kW drive, 96 poles, 9.16 rpm, 34.5 kV supply, delivery in 88 weeks (simulated, not real).
